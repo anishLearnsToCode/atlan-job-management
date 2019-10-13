@@ -1,75 +1,52 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# Atlan Test
+This app was created as part of a test for atlan. The structure of this project is very
+lean and simple. There is oen JobService class which is mimickin an actual service in a real
+system such as a database service tha might run different jobs that take a lot of time on a 
+database.
 
-[travis-image]: https://api.travis-ci.org/nestjs/nest.svg?branch=master
-[travis-url]: https://travis-ci.org/nestjs/nest
-[linux-image]: https://img.shields.io/travis/nestjs/nest/master.svg?label=linux
-[linux-url]: https://travis-ci.org/nestjs/nest
-  
-  <p align="center">A progressive <a href="http://nodejs.org" target="blank">Node.js</a> framework for building efficient and scalable server-side applications, heavily inspired by <a href="https://angular.io" target="blank">Angular</a>.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/dm/@nestjs/core.svg" alt="NPM Downloads" /></a>
-<a href="https://travis-ci.org/nestjs/nest"><img src="https://api.travis-ci.org/nestjs/nest.svg?branch=master" alt="Travis" /></a>
-<a href="https://travis-ci.org/nestjs/nest"><img src="https://img.shields.io/travis/nestjs/nest/master.svg?label=linux" alt="Linux" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#5" alt="Coverage" /></a>
-<a href="https://gitter.im/nestjs/nestjs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/nestjs/nestjs.svg" alt="Gitter" /></a>
-<a href="https://opencollective.com/nest#backer"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec"><img src="https://img.shields.io/badge/Donate-PayPal-dc3d53.svg"/></a>
-  <a href="https://twitter.com/nestframework"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Here the JobService can be invoked to run new jobs and create new jobs usinmg arbitrary 
+parameters such as parameterA and parameterB to mimick something tha might happen in the 
+real world where a service is induced to run the same job by mistake multip times and 
+also induced to run different parallel jobs.
 
-## Description
+If their already exists a job in the system with the same parameters values which hasn't 
+been terminated a new job with such parameters won't be created. If the new job request has 
+parameters that haven't been used yet a new job will be created by the JobService.  
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The service is never interfaced with directly by the user, but through a specific 
+JobController that offers a RESTful web api to the end user to avail this service.
 
-## Installation
-
-```bash
-$ npm install
-```
+The Jobs and corresponding statuses are being stored on a public firestore project for this
+project as this will be published open source and testers should have the ability to open the 
+online DB and make changes to see the corresponding entries. I also didn't want to publish 
+any f my credentials on this open source project, hence the selected DB is also publicly 
+accessible.   
 
 ## Running the app
-
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm i
+npm run start
 ```
+The local server is ran on __localhost:3000__
 
-## Test
+## API
+| Verb | Usage | Result |
+|------|-------|--------|
+|GET   |/jobs| Retrieves all jobs being managed by the Job Scheduler |
+|GET   |/jobs/{:id}| Retrieves job with string job ID {:id} passed in as parameter|
+|POST  |/jobs| Request to create a new job with JobSpecifics object passed in the body. A job can only be created if a job with the same parameters doesnt exist already and if it does is either in the __PAUSED__ or __RUNNING__ phase|
+|PUT   |/jobs/{:id}/pause|Request to pause any ongoing job.|
+|PUT   |/jobs/{:id}/resume|Request to resume any paused job.|
+|DELETE|/jobs| Request to stop all jobs irrespective of status and __remove__ them from the scheduler. This will delete and permanently remove all jobs from the scheduler|
+|DELETE|/jobs/{:id}| Request to terminate an ongoing job with job ID `id` and this job will still remain in the scheduler, but the status will be terminated. Once a job has ben terminated. It can't be started again.|
 
-```bash
-# unit tests
-$ npm run test
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-  Nest is [MIT licensed](LICENSE).
+### JobSpecifics
+JobSpecifics is an object passed in the body of the __POST__ request when creating the
+new Job parameter. It has 2 properties; `parameterA: number` and `parameterB: number`.
+````json
+{
+  "parameterA": 12,
+  "parameterB": -100
+}
+```` 
